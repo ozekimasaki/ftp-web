@@ -1,8 +1,8 @@
 import SftpClient from 'ssh2-sftp-client';
 import { Readable, Writable } from 'stream';
-import { ConnectionConfig, FileInfo } from '../types';
+import { ConnectionConfig, FileInfo, IFileService } from '../types';
 
-export class SftpService {
+export class SftpService implements IFileService {
   private client: SftpClient;
   private config: ConnectionConfig;
   private connected: boolean = false;

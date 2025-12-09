@@ -1,8 +1,8 @@
 import * as ftp from 'basic-ftp';
 import { Readable, Writable } from 'stream';
-import { ConnectionConfig, FileInfo } from '../types';
+import { ConnectionConfig, FileInfo, IFileService } from '../types';
 
-export class FtpService {
+export class FtpService implements IFileService {
   private client: ftp.Client;
   private config: ConnectionConfig;
 

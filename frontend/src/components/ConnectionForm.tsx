@@ -1,27 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ConnectionConfig, ProtocolType, SavedConnection } from '../types';
-import { encryptPassword, decryptPassword } from '../lib/crypto';
-import { parseFileZillaXml } from '../lib/filezilla';
+import { useState, useEffect } from 'react';
+import type { ConnectionConfig, ProtocolType } from '../types';
+import { useConnection } from '../hooks/useConnection';
 
 interface ConnectionFormProps {
   onConnect: (config: ConnectionConfig) => void;
   loading: boolean;
-}
-
-const STORAGE_KEY = 'ftp-saved-connections-v2'; // 暗号化版
-const OLD_STORAGE_KEY = 'ftp-saved-connections'; // 旧版（マイグレーション用）
-
-// 暗号化されたパスワードを持つ保存済み接続
-interface EncryptedSavedConnection {
-  id: string;
-  name: string;
-  config: {
-    protocol: ProtocolType;
-    host: string;
-    port: number;
-    username: string;
-    encryptedPassword: string;
-  };
 }
 
 export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
@@ -30,61 +13,20 @@ export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
   const [port, setPort] = useState(22);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [savedConnections, setSavedConnections] = useState<SavedConnection[]>([]);
   const [connectionName, setConnectionName] = useState('');
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importStatus, setImportStatus] = useState<{ success: boolean; message: string } | null>(null);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 保存済み接続を読み込み、必要ならマイグレーション
-  useEffect(() => {
-    const loadConnections = async () => {
-      // 新形式のデータを読み込み
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const encrypted: EncryptedSavedConnection[] = JSON.parse(saved);
-          const decrypted: SavedConnection[] = await Promise.all(
-            encrypted.map(async (conn) => ({
-              id: conn.id,
-              name: conn.name,
-              config: {
-                protocol: conn.config.protocol,
-                host: conn.config.host,
-                port: conn.config.port,
-                username: conn.config.username,
-                password: await decryptPassword(conn.config.encryptedPassword),
-              },
-            }))
-          );
-          setSavedConnections(decrypted);
-          return;
-        } catch {
-          // ignore
-        }
-      }
-      
-      // 旧形式のデータがあればマイグレーション
-      const oldSaved = localStorage.getItem(OLD_STORAGE_KEY);
-      if (oldSaved) {
-        try {
-          const oldConnections: SavedConnection[] = JSON.parse(oldSaved);
-          if (oldConnections.length > 0) {
-            setSavedConnections(oldConnections);
-            // 新形式で保存
-            await saveConnectionsInternal(oldConnections);
-            // 旧データを削除
-            localStorage.removeItem(OLD_STORAGE_KEY);
-          }
-        } catch {
-          // ignore
-        }
-      }
-    };
-    loadConnections();
-  }, []);
+  const {
+    savedConnections,
+    importStatus,
+    setImportStatus,
+    handleSave,
+    handleLoadConnection,
+    handleDeleteConnection,
+    handleImportFileZilla,
+    fileInputRef,
+  } = useConnection();
 
   useEffect(() => {
     // デフォルトポートを設定
@@ -100,87 +42,27 @@ export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
     onConnect({ protocol, host, port, username, password });
   };
 
-  // 接続を保存（内部用）
-  const saveConnectionsInternal = async (connections: SavedConnection[]) => {
-    const encrypted: EncryptedSavedConnection[] = await Promise.all(
-      connections.map(async (conn) => ({
-        id: conn.id,
-        name: conn.name,
-        config: {
-          protocol: conn.config.protocol,
-          host: conn.config.host,
-          port: conn.config.port,
-          username: conn.config.username,
-          encryptedPassword: await encryptPassword(conn.config.password),
-        },
-      }))
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(encrypted));
-  };
-
-  // 接続を保存（パスワードを暗号化）
-  const saveConnections = useCallback(async (connections: SavedConnection[]) => {
-    await saveConnectionsInternal(connections);
-  }, []);
-
-  const handleSave = async () => {
-    if (!connectionName.trim()) return;
-    
-    const newConnection: SavedConnection = {
-      id: Date.now().toString(),
-      name: connectionName,
-      config: { protocol, host, port, username, password },
-    };
-    
-    const updated = [...savedConnections, newConnection];
-    setSavedConnections(updated);
-    await saveConnections(updated);
+  const onSave = async () => {
+    await handleSave(connectionName, protocol, host, port, username, password);
     setConnectionName('');
     setShowSaveDialog(false);
   };
 
-  const handleLoadConnection = (conn: SavedConnection) => {
-    setProtocol(conn.config.protocol);
-    setHost(conn.config.host);
-    setPort(conn.config.port);
-    setUsername(conn.config.username);
-    setPassword(conn.config.password || '');
+  const onLoadConnection = (conn: typeof savedConnections[0]) => {
+    const config = handleLoadConnection(conn);
+    setProtocol(config.protocol);
+    setHost(config.host);
+    setPort(config.port);
+    setUsername(config.username);
+    setPassword(config.password);
   };
 
-  const handleDeleteConnection = async (id: string) => {
-    const updated = savedConnections.filter((c) => c.id !== id);
-    setSavedConnections(updated);
-    await saveConnections(updated);
-  };
-
-  // FileZilla XMLインポート
-  const handleImportFileZilla = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    try {
-      const content = await file.text();
-      const imported = parseFileZillaXml(content);
-      
-      if (imported.length === 0) {
-        setImportStatus({ success: false, message: 'インポート可能なサーバーが見つかりませんでした' });
-        return;
-      }
-      
-      // 既存の接続とマージ
-      const updated = [...savedConnections, ...imported];
-      setSavedConnections(updated);
-      await saveConnections(updated);
-      
-      setImportStatus({ success: true, message: `${imported.length}件のサーバーをインポートしました` });
+    if (file) {
+      await handleImportFileZilla(file);
       setShowImportDialog(false);
-    } catch (error) {
-      setImportStatus({ 
-        success: false, 
-        message: error instanceof Error ? error.message : 'インポートに失敗しました' 
-      });
     }
-    
     e.target.value = '';
   };
 
@@ -247,7 +129,7 @@ export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
                 >
                   <button
                     type="button"
-                    onClick={() => handleLoadConnection(conn)}
+                    onClick={() => onLoadConnection(conn)}
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
                   >
                     <span className="text-xs font-medium px-2 py-1 rounded bg-[var(--color-primary)]/20 text-[var(--color-primary)] uppercase flex-shrink-0">
@@ -436,7 +318,7 @@ export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
                 />
                 <button
                   type="button"
-                  onClick={handleSave}
+                  onClick={onSave}
                   disabled={!connectionName.trim()}
                   className="px-4 py-2 bg-[var(--color-success)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
                 >
@@ -472,7 +354,7 @@ export function ConnectionForm({ onConnect, loading }: ConnectionFormProps) {
                     ref={fileInputRef}
                     type="file"
                     accept=".xml"
-                    onChange={handleImportFileZilla}
+                    onChange={onFileSelect}
                     className="hidden"
                   />
                 </label>
