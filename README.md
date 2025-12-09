@@ -1,6 +1,7 @@
 # FTP WebUI
 
-Linux ARM64 環境で動作する、WebベースのFTP/FTPS/SFTPクライアントです。
+Linux ARM64 環境で動作する、WebベースのFTP/FTPS/SFTPクライアントです。  
+デスクトップアプリ（.deb）としてもインストール可能です。
 
 ## 機能
 
@@ -9,6 +10,26 @@ Linux ARM64 環境で動作する、WebベースのFTP/FTPS/SFTPクライアン�
 - **ファイル操作**: アップロード、ダウンロード、削除、リネーム、フォルダ作成
 - **ドラッグ＆ドロップ**: ファイルのアップロードに対応
 - **接続プロファイル保存**: 接続情報をブラウザに保存
+- **デスクトップアプリ**: Electronベースのネイティブアプリ
+
+## インストール（デスクトップアプリ）
+
+### .deb パッケージ（Debian/Ubuntu系）
+
+[Releases](https://github.com/ozekimasaki/ftp_dev/releases) から最新の `.deb` ファイルをダウンロードしてインストール：
+
+```bash
+sudo dpkg -i ftp-webui_1.0.0_arm64.deb
+
+# 依存関係エラーが出た場合
+sudo apt install -f
+```
+
+### アンインストール
+
+```bash
+sudo dpkg -r ftp-webui
+```
 
 ## 技術スタック
 
@@ -22,22 +43,21 @@ Linux ARM64 環境で動作する、WebベースのFTP/FTPS/SFTPクライアン�
 - Vite
 - Tailwind CSS
 
-## セットアップ
+### デスクトップアプリ
+- Electron
+- electron-builder
+
+## 開発者向け
 
 ### 必要要件
 
 - Node.js 18 以上
-- npm または yarn
+- npm
 
-### インストール
+### セットアップ
 
 ```bash
-# バックエンド
-cd backend
-npm install
-
-# フロントエンド
-cd ../frontend
+# 依存関係インストール（backend/frontend も自動でインストール）
 npm install
 ```
 
@@ -45,31 +65,29 @@ npm install
 
 ```bash
 # バックエンド（ポート 3001）
-cd backend
-npm run dev
+npm run dev:backend
 
 # フロントエンド（ポート 5173）
-cd frontend
-npm run dev
+npm run dev:frontend
 ```
 
 ブラウザで http://localhost:5173 にアクセスしてください。
 
-### 本番ビルド
+### ビルド
 
 ```bash
-# バックエンド
-cd backend
+# すべてビルド（backend + frontend + electron）
 npm run build
 
-# フロントエンド
-cd frontend
-npm run build
+# .deb パッケージ作成
+npm run dist:deb
 ```
+
+出力先: `release/ftp-webui_1.0.0_arm64.deb`
 
 ## 使い方
 
-1. ブラウザで http://localhost:5173 にアクセス
+1. アプリを起動（デスクトップアプリ or ブラウザ）
 2. 接続情報を入力（プロトコル、ホスト、ポート、ユーザー名、パスワード）
 3. 「接続」ボタンをクリック
 4. ファイルブラウザでファイル操作を行う
@@ -83,4 +101,3 @@ npm run build
 ## ライセンス
 
 MIT
-
