@@ -5,8 +5,8 @@ set -e
 cd "$(dirname "$0")/.."
 PROJECT_ROOT=$(pwd)
 
-# バージョン情報
-VERSION="1.0.0"
+# バージョン情報（package.jsonから取得）
+VERSION=$(node -p "require('./package.json').version")
 PACKAGE_NAME="ftp-webui"
 ARCH="arm64"
 
