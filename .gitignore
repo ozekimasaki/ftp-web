@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+*.local
+
+# Sensitive data / Connection profiles
+*.key
+*.pem
+*.p12
+*.pfx
+sitemanager.xml
+connections.json
+servers.json
+*.sqlite
+*.db
+

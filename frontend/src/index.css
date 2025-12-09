@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  
+  /* Dracula-inspired color palette */
+  --color-background: #1a1b26;
+  --color-surface: #24283b;
+  --color-surface-hover: #2f3549;
+  --color-border: #414868;
+  --color-text: #c0caf5;
+  --color-text-muted: #7982a9;
+  --color-primary: #7aa2f7;
+  --color-primary-hover: #89b4fa;
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-danger: #f7768e;
+  --color-info: #7dcfff;
+  --color-folder: #bb9af7;
+  --color-file: #c0caf5;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
