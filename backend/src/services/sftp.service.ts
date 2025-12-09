@@ -1,6 +1,6 @@
 import SftpClient from 'ssh2-sftp-client';
 import { Readable, Writable } from 'stream';
-import { ConnectionConfig, FileInfo } from '../types/index.js';
+import { ConnectionConfig, FileInfo } from '../types';
 
 export class SftpService {
   private client: SftpClient;

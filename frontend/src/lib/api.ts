@@ -1,6 +1,16 @@
 import type { ConnectionConfig, FileInfo, SessionInfo, ApiResponse } from '../types';
 
-const API_BASE = '/api/ftp';
+// Electron環境またはプロダクションビルドではバックエンドのURLを動的に決定
+function getApiBase(): string {
+  // 開発環境ではプロキシを使用
+  if (import.meta.env.DEV) {
+    return '/api/ftp';
+  }
+  // 本番環境（Electron含む）では同一オリジン
+  return '/api/ftp';
+}
+
+const API_BASE = getApiBase();
 
 async function request<T>(
   endpoint: string,

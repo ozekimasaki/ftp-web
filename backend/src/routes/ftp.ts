@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { FtpService } from '../services/ftp.service.js';
-import { SftpService } from '../services/sftp.service.js';
-import { ConnectionConfig, SessionInfo, ApiResponse, FileInfo } from '../types/index.js';
+import { FtpService } from '../services/ftp.service';
+import { SftpService } from '../services/sftp.service';
+import { ConnectionConfig, SessionInfo, ApiResponse, FileInfo } from '../types';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

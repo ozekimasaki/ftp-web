@@ -1,6 +1,6 @@
 import * as ftp from 'basic-ftp';
 import { Readable, Writable } from 'stream';
-import { ConnectionConfig, FileInfo } from '../types/index.js';
+import { ConnectionConfig, FileInfo } from '../types';
 
 export class FtpService {
   private client: ftp.Client;
